@@ -1,0 +1,89 @@
+---
+title: "Quality Control Jellybeans"
+author: "TAN, VALERIANO"
+date: "2025-12-12"
+output: html_document
+---
+
+# Preliminaries
+
+```{r}
+library(qcc)
+library(readr)
+jellybeans_raw <- read_csv("JELLYBEANS DATA - P1 & P2 COMPILED.csv")
+```
+
+# Quantitative Data
+
+## Pack Weight
+
+```{r}
+pack_weight <- with(jellybeans_raw, qcc.groups(Weight, SUBGROUP))
+oc.curves(qcc(pack_weight))
+
+nrow(jellybeans_raw)
+
+qcc(pack_weight[1:25,], type="xbar", newdata=pack_weight[26:45,])
+qcc(pack_weight[1:25,], type="R", newdata=pack_weight[26:45,])
+cusum(jellybeans_raw[!jellybeans_raw$`PHASE 1`,]$Weight)
+ewma(jellybeans_raw[!jellybeans_raw$`PHASE 1`,]$Weight, lambda = 0.2)
+```
+
+## Pack Height
+
+```{r}
+pack_height <- with(jellybeans_raw, qcc.groups(Height, SUBGROUP))
+
+qcc(pack_height[1:25,], type="xbar", newdata=pack_height[26:45,])
+qcc(pack_height[1:25,], type="S", newdata=pack_height[26:45,])
+qcc(pack_height[c(1:8, 10:25),], type="xbar", newdata=pack_height[26:45,])
+qcc(pack_height[c(1:8, 10:25),], type="S", newdata=pack_height[26:45,])
+cusum(jellybeans_raw[!jellybeans_raw$`PHASE 1`,]$Height)
+ewma(jellybeans_raw[!jellybeans_raw$`PHASE 1`,]$Height, lambda = 0.2)
+```
+
+## Pack Width
+
+```{r}
+avg_pack_width <- with(jellybeans_raw, qcc.groups(`Avg Width`, SUBGROUP))
+
+qcc(avg_pack_width[1:25,], type="xbar", newdata=avg_pack_width[26:45,])
+qcc(avg_pack_width[1:25,], type="S", newdata=avg_pack_width[26:45,])
+cusum(jellybeans_raw[!jellybeans_raw$`PHASE 1`,]$`Avg Width`)
+ewma(jellybeans_raw[!jellybeans_raw$`PHASE 1`,]$`Avg Width`, lambda = 0.2)
+```
+
+## Proportion of Warm Beans Per Pack
+
+```{r}
+prop_bean_warm <- with(jellybeans_raw, qcc.groups(`Warm Proportion`, SUBGROUP))
+
+qcc(prop_bean_warm[1:25,], type="xbar.one", newdata=prop_bean_warm[26:45,])
+cusum(jellybeans_raw[!jellybeans_raw$`PHASE 1`,]$`Warm Proportion`)
+ewma(jellybeans_raw[!jellybeans_raw$`PHASE 1`,]$`Warm Proportion`, lambda = 0.2)
+```
+
+# Qualitative Variables
+
+## Deformed Beans Per Subgroup
+
+```{r}
+deformed_beans <- with(jellybeans_raw, qcc.groups(`Deformed Count`, SUBGROUP))
+total_beans <- with(jellybeans_raw, qcc.groups(`Total Count`, SUBGROUP))
+
+qcc(deformed_beans[1:25], type = "u", sizes = total_beans[1:25], newdata = deformed_beans[26:45], newsizes = total_beans[26:45])
+```
+
+## Non-Warm Packs Per Subgroup
+
+```{r}
+non_warm_packs <- with(jellybeans_raw, qcc.groups(`Not Mostly Warm`, SUBGROUP))
+
+qcc(non_warm_packs[1:25], type = "np", sizes = 3, newdata = non_warm_packs[26:45], newsizes = 3)
+```
+
+# Process Capability
+
+```{r}
+process.capability(qcc(pack_weight[1:25, ], type="xbar", nsigmas=3, plot=FALSE), spec.limits=c(15 ,17), target=16)
+```
